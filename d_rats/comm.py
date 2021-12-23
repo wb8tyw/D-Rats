@@ -831,9 +831,14 @@ class SocketDataPath(DataPath):
             :returns: Tuple of count and line
             '''
             line = readline(sock, timeout)
+            # python3 line is a bytes object
+            if isinstance(line, str):
+                text_line = line
+            else:
+                text_line = line.decode('utf-8', 'replace')
 
             try:
-                code, string = line.split(" ", 1)
+                code, string = text_line.split(" ", 1)
                 code = int(code)
             # pylint: disable=broad-except
             except Exception:
