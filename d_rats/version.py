@@ -4,6 +4,7 @@
 # Copyright 2009 Dan Smith <dsmith@danplanet.com>
 # minor mods 2015-2020 by Maurizio Andreotti
 #                         <iz2lxi> maurizioandreottilc@gmail.com>
+# Copyright 2021-2022 John. E. Malmberg - Python3 Conversion
 #
 # #this module contains the d-rats version variables
 
@@ -36,9 +37,10 @@ AUTHORS_EMAIL = "Dan Smith KK7DS <dsmith@danplanet.com>;\n"  \
 COPYRIGHT = "Copyright 2010 Dan Smith (KK7DS)\n" \
           "Copyright 2014-2020 Maurizio Andreotti (IZ2LXI) &\n"  \
           "Marius Petrescu (YO2LOJ)\n" \
-          "Copyright 2021 John E. Malmberg (WB8TYW) - Python3 conversion\n" \
-		  "Location and Map data Copyright OpenStreetMap Contributors"
-LICENCE = "You should have received a copy of the" \
+          "Copyright 2021-2022 John E. Malmberg (WB8TYW)\n" \
+		  "Location and Map data Copyright www.thunderforest.com and\n" \
+          "copyright OpenStreetMap Contributors - www.osm.org/copyright"
+LICENSE = "You should have received a copy of the" \
 	      " GNU General Public License along with this program." \
 		  "  If not, see <http://www.gnu.org/licenses/>."
 WEBSITE = "https://groups.io/g/d-rats"
@@ -67,7 +69,7 @@ def main():
     logger.info("AUTHORS:               %s", AUTHORS)
     logger.info("AUTHORS_EMAIL:         %s", AUTHORS_EMAIL)
     logger.info("COPYRIGHT:             %s", COPYRIGHT)
-    logger.info("LICENCE:               %s", LICENCE)
+    logger.info("LICENSE:               %s", LICENSE)
     logger.info("WEBSITE:               %s", WEBSITE)
     logger.info("TRANSLATIONS:          %s", TRANSLATIONS)
 
