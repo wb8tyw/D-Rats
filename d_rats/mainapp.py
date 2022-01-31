@@ -1089,6 +1089,10 @@ class MainApp(Gtk.Application):
             mapurl = self.config.get("settings", "mapurlbase")
             mapkey = None
 
+        #todo: I think here it should trigger a refresh of the new map window after that a config reload/change is done
+        self.logger.info("_refresh_map: reconfigured mapurl to: %s", mapurl)
+        self.logger.info("_refresh_map: reconfigured mapkey to: %s", mapkey)
+        
         Map.Window.set_base_dir(os.path.join(
             self.config.get("settings", "mapdir"), maptype), mapurl, mapkey)
 
