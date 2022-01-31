@@ -2524,8 +2524,8 @@ class DratsConfig(configparser.ConfigParser):
             os.mkdir(os.path.join(map_dir, "base"))
         if not os.path.exists(os.path.join(map_dir, "cycle")):
             os.mkdir(os.path.join(map_dir, "cycle"))
-        if not os.path.exists(os.path.join(map_dir, "outdoor")):
-            os.mkdir(os.path.join(map_dir, "outdoor"))
+        if not os.path.exists(os.path.join(map_dir, "outdoors")):
+            os.mkdir(os.path.join(map_dir, "outdoors"))
         if not os.path.exists(os.path.join(map_dir, "landscape")):
             os.mkdir(os.path.join(map_dir, "landscape"))
 
