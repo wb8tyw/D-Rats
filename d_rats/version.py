@@ -37,9 +37,10 @@ AUTHORS_EMAIL = "Dan Smith KK7DS <dsmith@danplanet.com>;\n"  \
 COPYRIGHT = "Copyright 2010 Dan Smith (KK7DS)\n" \
           "Copyright 2014-2020 Maurizio Andreotti (IZ2LXI) &\n"  \
           "Marius Petrescu (YO2LOJ)\n" \
-          "Copyright 2021-2022 John E. Malmberg (WB8TYW)\n" \
+          "Copyright 2021-2022 John E. Malmberg (WB8TYW).\n" \
 		  "Location and Map data Copyright www.thunderforest.com and\n" \
-          "copyright OpenStreetMap Contributors - www.osm.org/copyright"
+          "copyright OpenStreetMap Contributors - www.osm.org/copyright.\n" \
+          "Some Map Data courtesy of the U.S. Geological Survey."
 LICENSE = "You should have received a copy of the" \
 	      " GNU General Public License along with this program." \
 		  "  If not, see <http://www.gnu.org/licenses/>."
