@@ -822,6 +822,7 @@ class SocketDataPath(DataPath):
     Socket Data Path.
 
     :param pathspec: Communication path
+    :type pathspec: tuple of (str, int) or :class:`socket.socket`
     :param timeout: Timeout in seconds, default 0.25
     :type timeout: float
     '''
@@ -829,6 +830,8 @@ class SocketDataPath(DataPath):
         DataPath.__init__(self, pathspec, timeout)
         self.logger = logging.getLogger("SocketDataPath")
         self._socket = None
+        self._name = None
+        self._pathspec = pathspec
 
         if isinstance(pathspec, socket.socket):
             self._socket = pathspec
@@ -839,8 +842,10 @@ class SocketDataPath(DataPath):
         elif len(pathspec) == 2:
             (self.host, self.port) = pathspec
             self.call = self.passwd = "UNKNOWN"
+            self._name = "%s:%i" % (self.host, self.port)
         else:
             (self.host, self.port, self.call, self.passwd) = pathspec
+            self._name = "%s:%i-%s" % (self.host, self.port, self.call)
 
     def reconnect(self):
         '''Reconnect.'''
@@ -934,23 +939,20 @@ class SocketDataPath(DataPath):
 
         :raises: :class:`DataPathNotConnectedError` on write error
         '''
-        # pylint: disable=broad-except
         try:
             self.logger.info("connection to %s %s", self.host, self.port)
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._socket.connect((self.host, self.port))
             self._socket.settimeout(self.timeout)
+            if isinstance(self._pathspec, socket.socket):
+                addr, port = self._socket.getpeername()
+                self._name = "%s:%i" % (addr, port)
 
-        except (BlockingIOError, socket.error) as err:
+        # On Windows, ConnectionError not based on OSError
+        except (ConnectionError, OSError) as err:
             self.logger.debug("Socket failed to connect", exc_info=True)
             self._socket = None
             raise DataPathNotConnectedError("Unable to connect (%s)" % err)
-        except Exception as err:
-            self.logger.info("Socket connect broad-exception", exc_info=True)
-
-            self._socket = None
-            raise DataPathNotConnectedError("Unable to connect (%s)" % err)
-
         if self.passwd is not None:
             self.do_auth()
 
@@ -968,12 +970,13 @@ class SocketDataPath(DataPath):
         :type size: int
         :returns: bytestring of data read
         :raises: :class:`DataPathIOError` on write error
+        :raises: :class:`DataPathNotConnectedError on socket disconnect
         '''
         data = b''
         end = time.time() + self.timeout
 
         if not self._socket:
-            raise DataPathIOError("Socket closed")
+            raise DataPathNotConnectedError("Socket closed")
 
         self._socket.setblocking(True)
         self._socket.settimeout(self.timeout)
@@ -988,8 +991,9 @@ class SocketDataPath(DataPath):
                     break
                 else:
                     continue
-            except Exception as err:
-                self.logger.info("read: broad-exception", exc_info=True)
+            # On Windows, ConnectionError not based on OSError
+            except (ConnectionError, OSError) as err:
+                self.logger.debug("read: error", exc_info=True)
                 raise DataPathIOError("Socket error: %s" % err)
 
             if inp == b'':
@@ -997,7 +1001,6 @@ class SocketDataPath(DataPath):
 
             end = time.time() + self.timeout
             data += inp
-
 
         return data
 
@@ -1010,7 +1013,7 @@ class SocketDataPath(DataPath):
         :raises: :class:`DataPathIOError` on write error
         '''
         if not self._socket:
-            raise DataPathIOError("Socket disconnected")
+            raise DataPathNotConnectedError("Socket disconnected")
 
         self._socket.setblocking(False)
 
@@ -1022,19 +1025,11 @@ class SocketDataPath(DataPath):
         while True:
             try:
                 data_read = self._socket.recv(4096)
-            except BlockingIOError:
+            # On Windows, ConnectionError not based on OSError
+            except (ConnectionError, OSError):
                 break
-            except socket.error:
-                break
-            # pylint: disable=broad-except
-            # except Exception as err:
-            #    # Best practice is to trap the specific exceptions that
-            #    # are known to occur.
-            #    self.logger.info("read_all_waiting: broad-exception",
-            #                     exc_info=True)
-            #    break
             if not data_read:
-                raise DataPathIOError("Socket disconnected: %s")
+                raise DataPathIOError("Socket disconnected")
             data += data_read
 
         return data
@@ -1048,24 +1043,16 @@ class SocketDataPath(DataPath):
         :raises: :class:`DataPathIOError` on write error
         '''
         ba_buf = buf
-        # print('comm/write type(buf) = %s' % type(buf))
-        # print("buf = %s" % buf)
-        # print('version is %s' % sys.version_info[0])
-        # print("is string = -%s- " % isinstance(buf, str))
         if sys.version_info[0] > 2 and isinstance(buf, str):
             # python3 hack
-            # print("python3 convert hack")
             ba_buf = buf.encode('utf-8', 'replace')
-            # print("  type(ba_buf) %s" % type(ba_buf))
-        # print("ba_buf = %s" % ba_buf)
-        # pylint: disable=broad-except
         try:
             self._socket.sendall(ba_buf)
         except ConnectionResetError:
             raise DataPathIOError("Socket write failed - Connection Reset")
-        except Exception:
-            self.logger.info("write: Socket write broad-except",
-                             exc_info=True)
+        # On Windows, ConnectionError not based on OSError
+        except (ConnectionError, OSError) as err:
+            self.logger.info("write: Socket write failed %s", err)
             raise DataPathIOError("Socket write failed")
 
     def is_connected(self):
@@ -1085,12 +1072,13 @@ class SocketDataPath(DataPath):
         '''
 
     def __str__(self):
+        name = ""
+        if self._name:
+            name = self._name
         try:
             if self._socket:
-                addr, port = self._socket.getpeername()
-                return "[NET %s:%i]" % (addr, port)
-            return "[NET closed]"
-        # pylint: disable=broad-except
-        except Exception:
-            self.logger.info(" __str__ broad-exception:", exc_info=True)
-            return "[NET closed]"
+                _addr, _port = self._socket.getpeername()
+                return "[NET %s]" % name
+        except (ConnectionError, OSError):
+            pass
+        return "[NET %s closed]" % name
