@@ -44,6 +44,7 @@ class BlockQueue():
         Enqueue
 
         :param block: Block to queue a lock for
+        :type block: :class:`DDT2Frame`
         '''
         self._lock.acquire()
         self._queue.insert(0, block)
@@ -54,6 +55,7 @@ class BlockQueue():
         Requeue a lock.
 
         :param block: Block to return
+        :type block: :class:`DDT2Frame`
         '''
         self._lock.acquire()
         self._queue.append(block)
@@ -61,9 +63,10 @@ class BlockQueue():
 
     def dequeue(self):
         '''
-        Dequeue a lock
+        Dequeue a block
 
-        :returns: lock dequeued
+        :returns: block dequeued
+        :rtype: :class:`DDT2Frame`
         '''
         self._lock.acquire()
         if self._queue:
@@ -79,6 +82,7 @@ class BlockQueue():
         Dequeue all locks
 
         :returns: Queue of locks that were released
+        :rtype: list of :class:`DDT2Frame`
         '''
         self._lock.acquire()
         locks = self._queue
@@ -91,7 +95,8 @@ class BlockQueue():
         '''
         Peek
 
-        :returns: Lock element
+        :returns: block
+        :rtype: :class:`DDT2Frame`
         '''
         self._lock.acquire()
         if self._queue:
@@ -107,6 +112,7 @@ class BlockQueue():
         Peek All.
 
         :returns: queue of locks
+        :rtype: list of :class:`DDT2Frame`
         '''
         self._lock.acquire()
         queue = self._queue
@@ -166,7 +172,7 @@ class Transporter():
         self.msg_fn = kwargs.get("msg_fn", None)
         self.name = kwargs.get("port_name", "")
         self.hexdump = False
-
+        self.shutdown = False
         self.thread = threading.Thread(target=self.worker,
                                        args=(authfn,))
         self.thread.setDaemon(True)
@@ -425,6 +431,8 @@ class Transporter():
 
         while self.enabled:
             while self.enabled:
+                if self.shutdown:
+                    break
                 try:
                     self.get_input()
                 except comm.DataPathError:
@@ -471,6 +479,8 @@ class Transporter():
         '''Disable transport.'''
         self.inhandler = None
         self.enabled = False
+        self.was_connected = False
+        self.shutdown = True
         self.thread.join()
 
     def send_frame(self, frame):
@@ -500,6 +510,7 @@ class Transporter():
         Flush blocks
 
         :param ident: Session id
+        :type ident: int
         '''
         # This should really call a flush method in the blockqueue with a
         # test function

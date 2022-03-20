@@ -167,7 +167,38 @@ def kiss_recv_frame(buf):
     return data, out_buf
 
 
-# pylint: disable=too-many-ancestors
+# Serial port standards require:
+
+# DTR signal must be enabled when an application has the port opened.
+# (Except for some printers that do not comply with the standard and
+#  use DTR/DSR incorrectly for flow control.)
+
+# The DTR signal enable tells the other device that your application is
+# alive, so it data from it is valid.
+
+# The DTR signal must be disabled when no application is using a port.
+
+# RTS signal must be enabled before sending any data.
+
+# python pySerial versions have changed what they set these signals to by
+# default, so we can not trust that the defaults meet what the standards
+# require.
+
+# For cables that do not not contain the CTS/RTS signals, those signals
+# should always be jumperred at the connector if the connector has those pins.
+
+# For cables that do not contain the DSR/DTR signals, those signals should
+# always be jumperred at the connector if the connector has those pins.
+
+# if you do not make sure that these are done for compliance with the standard
+# you can waste a lot of time trying to find out why things are not working.
+
+# Also note at least one TNC vendor has the wrong wiring on their serial port,
+# so it needs a special cable to work when connected to a system that expects
+# standard compliant signaling.
+
+# pylint wants only 7 instance attributes
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
 class TNCSerial(serial.Serial):
     '''
     TNC Serial.
@@ -178,22 +209,33 @@ class TNCSerial(serial.Serial):
     '''
     def __init__(self, **kwargs):
         self.logger = logging.getLogger("TNCSerial")
-        if "tncport" in list(kwargs.keys()):
+        if "tncport" in kwargs:
             self.__tncport = kwargs["tncport"]
             del kwargs["tncport"]
         else:
             self.__tncport = 0
         serial.Serial.__init__(self, **kwargs)
+        self.dtr = True
+        self.rts = True
 
+        self.name = "Unknown"
+        if "port" in kwargs:
+            self.name = kwargs["port"]
         self.__buffer = b""
         self.__tstamp = 0
+        self.use_dsr = False
+        if "dsr_control" in kwargs:
+            self.use_dsr = kwargs["dsr_control"]
+            del kwargs["dsr_control"]
+        self.dsr_seen = False
 
     def reconnect(self):
         '''
         Reconnect.
 
-        Does nothing
+        Does nothing currently.
         '''
+        self.dsr_seen = False
 
     def write(self, data):
         '''
@@ -201,7 +243,16 @@ class TNCSerial(serial.Serial):
 
         :param data: Data to write
         :type data: bytes
+        :raises: :class:`DatapathNotConnectedError` on disconnect.
         '''
+        if self.use_dsr and not self.dsr:
+            raise DataPathNotConnectedError("Serial port disconnected %s" %
+                                            self.name)
+        if self.dsr:
+            if not self.dsr_seen:
+                self.logger.info("Serial port Connection Confirmed %s",
+                                 self.name)
+            self.dsr_seen = True
         serial.Serial.write(self, kiss_send_frame(data, self.__tncport))
 
     # parent has size=1
@@ -214,7 +265,16 @@ class TNCSerial(serial.Serial):
         :type size: int
         :returns: Read frame data
         :rtype: bytes
+        :raises: :class:`DatapathNotConnectedError` on disconnect.
         '''
+        if self.use_dsr and not self.dsr:
+            raise DataPathNotConnectedError("Serial port disconnected %s" %
+                                            self.name)
+        if self.dsr:
+            if not self.dsr_seen:
+                self.logger.info("Serial port Connection Confirmed %s",
+                                 self.name)
+            self.dsr_seen = True
         read_buffer = serial.Serial.read(self, 1024)
         framedata = b""
         if isinstance(read_buffer, str):
@@ -250,6 +310,9 @@ class SWFSerial(serial.Serial):
         self.logger.info("Software XON/XOFF control initialized")
         try:
             serial.Serial.__init__(self, **kwargs)
+            self.dtr = True
+            self.rts = True
+
         except TypeError:
             if "writeTimeout" in kwargs:
                 del kwargs["writeTimeout"]
@@ -258,22 +321,44 @@ class SWFSerial(serial.Serial):
                 self.logger.info("Unknown TypeError from Serial.__init__:",
                                  exc_info=True)
                 raise
-
+        self.name = "Unknown"
+        if "port" in kwargs:
+            self.name = kwargs["port"]
         self.state = True
         self.xoff_limit = 15
+        self.use_dsr = False
+        if "dsr_control" in kwargs:
+            self.use_dsr = kwargs["dsr_control"]
+            del kwargs["dsr_control"]
+        self.dsr_seen = False
 
     def reconnect(self):
         '''Reconnect.'''
+        self.dtr = False
+        self.rts = False
         self.close()
+        self.dsr_seen = False
         time.sleep(0.5)
         self.open()
+        self.dtr = True
+        self.rts = True
+
 
     def is_xon(self):
         '''
         Is in xon state?
 
         :returns: True if data transmissions are allowed
+        :raises: :class:`DataPathNotConnectedError` on serial port disconnect
         '''
+        if self.use_dsr and not self.dsr:
+            raise DataPathNotConnectedError("Serial port disconnected %s" %
+                                            self.name)
+        if self.dsr:
+            if not self.dsr_seen:
+                self.logger.info("Serial port Connection Confirmed %s",
+                                 self.name)
+            self.dsr_seen = True
         time.sleep(0.01)
         if self.in_waiting == 0:
             return self.state
@@ -295,6 +380,14 @@ class SWFSerial(serial.Serial):
         return self.state
 
     def _write(self, data):
+        if self.use_dsr and not self.dsr:
+            raise DataPathNotConnectedError("Serial port disconnected %s" %
+                                            self.name)
+        if self.dsr:
+            if not self.dsr_seen:
+                self.logger.info("Serial port Connection Confirmed %s",
+                                 self.name)
+            self.dsr_seen = True
         chunk = 8
         pos = 0
         while pos < len(data):
@@ -315,7 +408,8 @@ class SWFSerial(serial.Serial):
                     # self.logger.info(
                     #     "_write: XOFF for too long, breaking loop!")
                     # raise DataPathIOError("Write error (flow)")
-                    self.logger.info("_write: XOFF for too long, assuming XON")
+                    self.logger.info("_write: XOFF for too long,"
+                                     " assuming XON %s", self.name)
                     self.state = True
 
     def write(self, data):
@@ -343,6 +437,14 @@ class SWFSerial(serial.Serial):
         :returns: data read
         :rtype: bytes
         '''
+        if self.use_dsr and not self.dsr:
+            raise DataPathNotConnectedError("Serial port disconnected %s" %
+                                            self.name)
+        if self.dsr:
+            if not self.dsr_seen:
+                self.logger.info("Serial port Connection Confirmed %s",
+                                 self.name)
+                self.dsr_seen = True
         return serial.Serial.read(self, size)
 
 
@@ -543,22 +645,6 @@ class SerialDataPath(DataPath):
                                      timeout=self.timeout,
                                      writeTimeout=self.timeout,
                                      xonxoff=0)
-            # Compliant Serial port standards require:
-            # DTR signal must be enabled when an application has the port
-            # opened.
-            # The DTR signal enable tells the other device that your
-            # application is alive, so it data from it is valid.
-            # RTS signal must be enabled before sending any data.
-            # python pySerial versions have changed what they set these
-            # signals to by default, so we can not trust that the defaults
-            # meet what the standards require.
-            # if you do not make sure that these are set, you can waste
-            # a lot of time trying to find out why things are not working.
-            # Also note at least one TNC vendor has the wrong wiring on
-            # their serial port, so it needs a special cable to work when
-            # connected to a system that expects standard compliant wiring.
-            self._serial.dtr = True
-            self._serial.rts = True
         except (ValueError, serial.SerialException) as err:
             raise DataPathNotConnectedError("Unable to open serial port %s" %
                                             err)
@@ -600,13 +686,21 @@ class SerialDataPath(DataPath):
         :returns: data read
         :rtype: bytes
         :raises: DataPathIOError on read error
+        :raises: :class:`DatapathNotConnectedError` on disconnect.
         '''
+        if self._serial.use_dsr and not self._serial.dsr:
+            raise DataPathNotConnectedError("Serial port disconnected %s" %
+                                            self)
+        if self._serial.dsr:
+            if not self._serial.dsr_seen:
+                self.logger.info("Serial port Connection Confirmed %s", self)
+            self._serial.dsr_seen = True
         try:
             data = self._serial.read(size)
         except serial.SerialException as err:
             utils.log_exception()
-            raise DataPathIOError("Failed to read from serial port %s" %
-                                  err)
+            raise DataPathIOError("Failed to read from serial port %s %s" %
+                                  (self, err))
 
         return data
 
@@ -630,12 +724,21 @@ class SerialDataPath(DataPath):
         :param buf: Buffer to write
         :type buf: bytes
         :raises: DataPathIOError on write failure
+        :raises: :class:`DatapathNotConnectedError` on disconnect.
         '''
+        if self._serial.use_dsr and not self._serial.dsr:
+            raise DataPathNotConnectedError("Serial port disconnected %s" %
+                                            self)
+        if self._serial.dsr:
+            if not self._serial.dsr_seen:
+                self.logger.info("Serial port Connection Confirmed %s", self)
+            self._serial.dsr_seen = True
         try:
             self._serial.write(buf)
         except (serial.SerialException, serial.SerialTimeoutException) as err:
             utils.log_exception()
-            raise DataPathIOError("Failed to write to serial port %s" % err)
+            raise DataPathIOError("Failed to write to serial port %s %s" %
+                                  (self, err))
 
     def is_connected(self):
         '''
