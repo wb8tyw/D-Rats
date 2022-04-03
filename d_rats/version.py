@@ -21,8 +21,10 @@ if __name__ == "__main__":
     lang.install()
     _ = lang.gettext
 
-
-DRATS_VERSION = "0.4.00 pre-release 1"
+# DRATS_VERSION_NUM can not have "-" characters in it.
+# That will break w2lk
+DRATS_VERSION_NUM = "0.4.00"
+DRATS_VERSION = DRATS_VERSION_NUM + " pre-release1"
 DRATS_NAME = "d-rats"
 DRATS_DESCRIPTION = "D-RATS"
 DRATS_LONG_DESCRIPTION = "A communications tool for D-STAR"
