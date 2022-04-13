@@ -831,7 +831,7 @@ class WinLinkTelnet(WinLinkCMS):
         if not resp.startswith(b"Callsign :"):
             raise Wl2kTelnetNoLogin("Conversation error (never saw login)")
 
-        self._send(self._callsign)
+        self._send(self._callsign.encode('utf-8', 'replace'))
         resp = self._recv()
         if not resp.startswith(b"Password :"):
             raise Wl2kTelnetNoPassword("Conversation error (never saw password)")
