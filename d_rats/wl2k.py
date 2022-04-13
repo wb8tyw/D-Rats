@@ -869,6 +869,7 @@ class WinLinkTelnet(WinLinkCMS):
             rem = 6
             todo = 3
             cresp_str = ""
+            zero = ord('0')
             while rem > 0:
                 octet = random.randint(0, 255)
 
@@ -876,7 +877,7 @@ class WinLinkTelnet(WinLinkCMS):
                     cresp_str += chr(random.randint(33, 126))
                 else:
                     todo -= 1
-                    cresp_str += passwd[int(chall[todo])]
+                    cresp_str += passwd[chall[todo] - zero]
                 rem -= 1
 
             self._send(cresp_str.encode('utf-8', 'replace'))
