@@ -496,7 +496,7 @@ class WinLinkMessage:
 
         # Checksum, mod 256, two's complement
         checksum = (~checksum & 0xFF) + 1
-        sock.send(struct.pack("<BB", FBB_BLOCK_EOF, sum))
+        sock.send(struct.pack("<BB", FBB_BLOCK_EOF, checksum))
 
     def get_content(self):
         '''
