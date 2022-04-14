@@ -417,9 +417,9 @@ class WinLinkMessage:
         i = 0
         while True:
             self.logger.info("read_from_socket: Reading at %i", i)
-            block_type = ord(self.recv_exactly(sock, 1))
+            block_type = self.recv_exactly(sock, 1)
 
-            if chr(block_type) == "*":
+            if block_type == b"*":
                 msg = sock.recv(1024)
                 raise Wl2kMessageSocketReadError("Error getting message: %s" %
                                                  msg)
@@ -433,12 +433,12 @@ class WinLinkMessage:
 
             self.logger.info("read_from_socket: Found %s at %i",
                              FBB_BLOCK_TYPES.get(block_type, "unknown"), i)
-            size = ord(self.recv_exactly(sock, 1))
+            size = self.recv_exactly(sock, 1)
             i += 2 # Account for the type and size
 
             if block_type == FBB_BLOCK_HDR:
                 header = self.recv_exactly(sock, size)
-                self.__name, offset, _foo = header.split("\0")
+                self.__name, offset, _foo = header.split(b"\0")
                 self.logger.info("read_from_socket: Name is `%s' offset %s\n",
                                  self.__name, offset)
                 i += size
@@ -450,7 +450,7 @@ class WinLinkMessage:
             elif block_type == FBB_BLOCK_EOF:
                 content_size = size
                 for i in data:
-                    content_size += ord(i)
+                    content_size += i
                 if (content_size % 256) != 0:
                     self.logger.info("read_from_socket: "
                                      "Ack! %i left from content_size %i",
@@ -480,7 +480,8 @@ class WinLinkMessage:
         data = self.__lzh_content
 
         # filename \0 length(0) \0
-        header = self.__name + "\x00" + chr(len(data) & 0xFF) + "\x00"
+        header_str = self.__name + "\x00" + chr(len(data) & 0xFF) + "\x00"
+        header = header_str.encode('utf-8', 'replace')
         sock.send(struct.pack("<BB", FBB_BLOCK_HDR, len(header)) + header)
 
         checksum = 0
@@ -489,7 +490,7 @@ class WinLinkMessage:
             data = data[128:]
 
             for i in chunk:
-                checksum += ord(i)
+                checksum += i
 
             sock.send(struct.pack("<BB", FBB_BLOCK_DAT, len(chunk)) + chunk)
 
@@ -682,7 +683,7 @@ class WinLinkCMS:
                 if line.startswith(b"FC"):
                     self.logger.info("__get_list: Creating message for %s",
                                      line)
-                    msgs.append(WinLinkMessage(line))
+                    msgs.append(WinLinkMessage(line.decode('utf-8', 'replace')))
                 elif line.startswith(b"F>"):
                     reading = False
                     break
@@ -873,7 +874,7 @@ class WinLinkTelnet(WinLinkCMS):
             while rem > 0:
                 octet = random.randint(0, 255)
 
-                if octet > 127 and rem > todo:
+                if octet > 127 and rem > todo or todo <= 0:
                     cresp_str += chr(random.randint(33, 126))
                 else:
                     todo -= 1
