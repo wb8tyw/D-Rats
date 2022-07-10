@@ -370,9 +370,7 @@ class MainWindow(MainWindowElement):
     def _connect_menu_items(self):
 
         menu_quit = self._wtree.get_object("main_menu_quit")
-        add_menu_accel_theme_image(menu_quit, "application-exit",
-                                   _("Quit"), "Q",
-                                   Gdk.ModifierType.CONTROL_MASK)
+        add_menu_accel_theme_image(menu_quit, "application-exit", _("Quit"))
         menu_quit.connect("activate", self._activate_save_and_quit)
 
         about = self._wtree.get_object("main_menu_about")
@@ -384,14 +382,11 @@ class MainWindow(MainWindowElement):
 
         menu_prefs = self._wtree.get_object("main_menu_prefs")
         add_menu_accel_theme_image(menu_prefs, "preferences-system",
-                                   _("Preferences"), "P",
-                                   Gdk.ModifierType.MOD1_MASK)
+                                   _("Preferences"))
         menu_prefs.connect("activate", self._activate_prefs)
 
         menu_map = self._wtree.get_object("main_menu_map")
-        add_menu_accel_file_image(menu_map, "images/map.png",
-                                  _("Map"), "M",
-                                  Gdk.ModifierType.CONTROL_MASK)
+        add_menu_accel_file_image(menu_map, "images/map.png", _("Map"))
         menu_map.connect("activate", self._activate_map)
 
         menu_templates = self._wtree.get_object("main_menu_msgtemplates")
@@ -399,8 +394,7 @@ class MainWindow(MainWindowElement):
 
         ping = self._wtree.get_object("main_menu_ping")
         add_menu_accel_file_image(ping, "images/event_ping.png",
-                                  _("Ping Station"), "P",
-                                  Gdk.ModifierType.CONTROL_MASK)
+                                  ("Ping Station"))
         ping.connect("activate", self._activate_ping)
 
         conn = self._wtree.get_object("main_menu_conninet")

@@ -575,9 +575,7 @@ class ChatTab(MainWindowTab):
         bcast.connect("activate", self._bcast_file, dest)
 
         clear = self._wtree.get_object("main_menu_clear")
-        add_menu_accel_theme_image(clear, "edit-clear",
-                                   _("Clear"), "L",
-                                   Gdk.ModifierType.CONTROL_MASK)
+        add_menu_accel_theme_image(clear, "edit-clear", _("Clear"))
         clear.connect("activate", self._clear)
 
         try:

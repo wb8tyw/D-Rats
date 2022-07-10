@@ -20,12 +20,14 @@
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gdk
 from gi.repository import Gtk
 
+# The glade editor used to create the mainwindow can not add icons to the
+# Gtk.MenuItem widgets it defines now that Gtk.ImageMenuItem is deprecated.
+# These functions patch the Gtk.MenuItem to be able to use a PNG image file
+# or a "themed" icon that replaces the deprecated stock icons.
 
-def _add_menu_accel_image(menu_item, menu_icon, label_text,
-                         accel_key_char, accel_mods):
+def _add_menu_accel_image(menu_item, menu_icon, label_text):
     '''
     Add Menu with Accelerator and Theme Image.
 
@@ -35,28 +37,19 @@ def _add_menu_accel_image(menu_item, menu_icon, label_text,
     :type icon_name: :class:`Gtk.Image`
     :param label_text: Text for label
     :type label_text: str
-    :param accel_key_char: Accelerator Key character, Default None
-    :type accel_key_char: str
-    :param accel_mods: Modifiers for key
-    :type accel_mods: :class:`Gdk.ModifierType`
     '''
-    accel_key = Gdk.unicode_to_keyval(ord(accel_key_char))
     menu_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 6)
     menu_box.add(menu_icon)
     label = Gtk.AccelLabel.new(label_text)
-    accel_group = Gtk.AccelGroup.new()
+    label.set_use_underline(True)
     label.set_xalign(0.0)
-    menu_item.add_accelerator("activate", accel_group,
-                              accel_key,
-                              accel_mods,
-                              Gtk.AccelFlags.VISIBLE)
-    menu_box.pack_end(label, True, True, 0)
     label.set_accel_widget(menu_item)
+    menu_box.pack_end(label, True, True, 0)
     menu_item.add(menu_box)
     menu_item.show_all()
 
-def add_menu_accel_theme_image(menu_item, icon_name, label_text,
-                               accel_key_char, accel_mods):
+
+def add_menu_accel_theme_image(menu_item, icon_name, label_text):
     '''
     Add Menu with Accelerator and Theme Image.
 
@@ -66,18 +59,12 @@ def add_menu_accel_theme_image(menu_item, icon_name, label_text,
     :type icon_name: str
     :param label_text: Text for label
     :type label_text: str
-    :param accel_key_char: Accelerator Key character, Default None
-    :type accel_key_char: str
-    :param accel_mods: Modifiers for key
-    :type accel_mods: :class:`Gdk.ModifierType`
     '''
     menu_icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.MENU)
-    _add_menu_accel_image(menu_item, menu_icon, label_text,
-                          accel_key_char, accel_mods)
+    _add_menu_accel_image(menu_item, menu_icon, label_text)
 
 
-def add_menu_accel_file_image(menu_item, icon_file, label_text,
-                              accel_key_char, accel_mods):
+def add_menu_accel_file_image(menu_item, icon_file, label_text):
     '''
     Add Menu with Accelerator and Theme Image.
 
@@ -87,20 +74,33 @@ def add_menu_accel_file_image(menu_item, icon_file, label_text,
     :type icon_name: str
     :param label_text: Text for label
     :type label_text: str
-    :param accel_key_char: Accelerator Key character, Default None
-    :type accel_key_char: str
-    :param accel_mods: Modifiers for key
-    :type accel_mods: :class:`Gdk.ModifierType`
     '''
     image = Gtk.Image()
     image.set_from_file(icon_file)
-    _add_menu_accel_image(menu_item, image, label_text,
-                          accel_key_char, accel_mods)
+    _add_menu_accel_image(menu_item, image, label_text)
 
 
-def add_menu_theme_image(menu_item, icon_name, label_text):
+def _add_menu_image(menu_item, menu_icon, label_text):
     '''
-    Add Menu with Theme Image.
+    Add Menu with Icon Image.
+
+    :param menu_item: Menu item object
+    :type menu_item: :class:`Gtk.MenuItem`
+    :param label_text: Text for label
+    :type label_text: str
+    '''
+    menu_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 6)
+    menu_box.add(menu_icon)
+    label = Gtk.Label.new(label_text)
+    label.set_xalign(0.0)
+    menu_box.add(label)
+    menu_item.add(menu_box)
+    menu_item.show_all()
+
+
+def add_menu_file_image(menu_item, icon_name, label_text):
+    '''
+    Add Menu with file Image.
 
     :param menu_item: Menu item object
     :type menu_item: :class:`Gtk.MenuItem`
@@ -109,11 +109,20 @@ def add_menu_theme_image(menu_item, icon_name, label_text):
     :param label_text: Text for label
     :type label_text: str
     '''
-    menu_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 6)
     menu_icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.MENU)
-    menu_box.add(menu_icon)
-    label = Gtk.Label.new(label_text)
-    label.set_xalign(0.0)
-    menu_box.add(label)
-    menu_item.add(menu_box)
-    menu_item.show_all()
+    _add_menu_image(menu_item, menu_icon, label_text)
+
+
+def add_menu_theme_image(menu_item, icon_name, label_text):
+    '''
+    Add Menu with Theme Image.
+
+    :param menu_item: Menu item object
+    :type menu_item: :class:`Gtk.MenuItem`
+    :param icon_name: File with icon
+    :type icon_name: str
+    :param label_text: Text for label
+    :type label_text: str
+    '''
+    menu_icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.MENU)
+    _add_menu_image(menu_item, menu_icon, label_text)
