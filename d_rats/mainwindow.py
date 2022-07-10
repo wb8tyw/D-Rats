@@ -242,7 +242,7 @@ class MainWindow(MainWindowElement):
         :param _button: Signaled Widget, unused
         :type _button: :class:`Gtk.ImageMenuItem`
         '''
-        saved = self._config.show(parent=self.window)
+        saved = self._config.show(parent=self._window)
         if saved:
             self.emit("config-changed")
             for tabs in self.tabs.values():
