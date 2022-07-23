@@ -121,8 +121,6 @@ class Version:
         if not cls._pep440_version:
             cls._get_pep440_version()
         cls._full_version = cls._pep440_version
-        cls.logger.info('_get_full_version: %s %s',
-                        cls._pep440_version, cls._full_version)
         if cls._version['git_hash']:
             cls._full_version += '-' + cls._version['git_hash']
         if cls._version['dirty']:
@@ -179,7 +177,7 @@ class Version:
         key = old_re.group(1)
         if not key:
             return
-        if cls._version[key]:
+        if not cls._version[key]:
             beta_num = '1'
             if old_re.group(2):
                 beta_num = old_re.group(2)
