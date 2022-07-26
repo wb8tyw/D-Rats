@@ -142,7 +142,7 @@ class Version:
             return
         # Look for PEP-440 compliant release
         regex = r'^((?:\.\d+)*)?' + \
-                r'(.dev\d+)?(a\d+)?(b\d+)?(r?c\d+)?(.post\d+)?(.*)?'
+                r'(a\d+)?(b\d+)?(r?c\d+)?(.dev\d+)?(.post\d+)?(.*)?'
         release_re = re.search(regex, cls._version['extra'])
         cls._version['pico'] = release_re.group(1)
         cls._version['dev'] = release_re.group(2)
@@ -159,7 +159,7 @@ class Version:
         # a second dash followed by a git hash beginning with a letter g.
         # with a possible "-dirty" if there are un-committed changes
         # to the repository
-        git_regex = r'^([^-]*)?(?:\-(\d+)-(g[^-]+))?(-dirty)?(.*)?'
+        git_regex = r'^([^-]*)?(?:\-(\d+))?(?:-(g[^-]+))?(-dirty)?(.*)?'
         git_re = re.search(git_regex, cls._version['extra'])
         if git_re:
             cls._version['commits'] = git_re.group(2)
@@ -267,6 +267,17 @@ class Version:
 
         if not cls._version:
             cls.logger.debug('Not running from a git repository')
+            # The new python build procedure will add setup_version.py
+            # to the d_rats directory.
+            try:
+                # comments below suppresses pylint and pylance diagnostics
+                # because this module is not in the checked out source tree
+                # pylint: disable=import-error, no-name-in-module
+                from d_rats.setup_version import SETUP_VERSION # type: ignore
+                cls._parse_version(SETUP_VERSION)
+            except ModuleNotFoundError:
+                pass
+        if not cls._version:
             try:
                 # Extract the version from the PKG-INFO file.
                 with open(join(module_dir, 'PKG-INFO')) as file_handle:
