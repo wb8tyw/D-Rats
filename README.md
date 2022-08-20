@@ -139,7 +139,7 @@ libs installed):
 Debian packages needed for running or development.
 
 Below if you are not in a locale that is english, you will need the aspell-
-variant dictionary for your locale.  Developers may need apell- variant
+variant dictionary for your locale.  Developers may need aspell- variant
 dictionaries for all locales that D-rats has message files for.
 
 The python2 packages are only needed for running the stable python2 version
@@ -228,7 +228,7 @@ See <https://pypi.org/project/towncrier/>
 If you run the 'towncrier build' command by accident, you will need
 revert the local changes that it makes to your checked out git repository.
 
-Normally a git tag wtih a PEP-440 compliant version will be created before
+Normally a git tag with a PEP-440 compliant version will be created before
 the python package build procedure is run, and you would check out that
 commit for doing the build.
 

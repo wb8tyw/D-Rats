@@ -28,4 +28,3 @@ packages = ['d_rats', 'd_rats.map', 'd_rats.sessions', 'd_rats.ui' ]
 
 [tool.setuptools.dynamic]
 version = {attr = "d_rats.version.DRATS_PEP440_VERSION"}
-
