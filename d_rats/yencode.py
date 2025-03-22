@@ -3,7 +3,7 @@
 #
 # Copyright 2008 Dan Smith <dsmith@danplanet.com>
 #
-# Copyright 2021-2022 John. E. Malmberg - Python3 Conversion
+# Copyright 2021-2025 John. E. Malmberg - Python3 Conversion
 # # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
 from __future__ import absolute_import
 import sys
 
-DEFAULT_BANNED = b"\x11\x13\x1A\00\xFD\xFE\xFF"
+DEFAULT_BANNED = b"\x11\x13\x1A\00\x84\xFD\xFE\xFF"
 OFFSET = 64
 
 
