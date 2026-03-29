@@ -1,0 +1,22 @@
+# requirements for d-rats
+# Packages needed for running
+lxml
+Pillow
+# pycairo not available for Ubuntu GitHub workflows
+# PyGObject not available for Ubuntu GitHub workflows
+pyserial
+pycountry
+# packages recommended for running
+geopy
+feedparser
+# pyaudio not available for Ubuntu GitHub workflows
+pydub
+# packages needed for development
+build
+pip
+pylint
+setuptools
+Sphinx
+towncrier
+virtualenv
+wheel

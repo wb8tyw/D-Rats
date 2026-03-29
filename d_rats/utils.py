@@ -23,10 +23,16 @@ import tempfile
 
 import urllib.request
 
-import gi
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
-from gi.repository import Gdk
+# This version of D-Rats requires GTK 3.0, but not for doing unit
+# tests.   This allows the default unit tests to pass on a system with
+# out GTK+ installed.
+try:
+    import gi
+    gi.require_version("Gtk", "3.0")
+    from gi.repository import Gtk
+    from gi.repository import Gdk
+except (ImportError, ValueError):
+    pass
 
 # This makes pylance happy with out overriding settings
 # from the invoker of the class

@@ -1,0 +1,24 @@
+# requirements for d-rats
+# Microsoft Windows needed
+pywin32
+# Packages needed for running
+lxml
+Pillow
+pycairo
+# PyGObject not available for Windows GitHub workflows
+pyserial
+pycountry
+# packages recommended for running
+geopy
+feedparser
+pyaudio
+pydub
+# packages needed for development
+build
+pip
+pylint
+setuptools
+Sphinx
+towncrier
+virtualenv
+wheel

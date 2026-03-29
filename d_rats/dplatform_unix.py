@@ -57,7 +57,8 @@ class UnixPlatform(PlatformGeneric):
             os.makedirs(basepath, exist_ok=True)
         self._base = basepath
 
-    def default_dir(self):
+    @staticmethod
+    def default_dir():
         '''
         Default Directory.
 
@@ -99,11 +100,15 @@ class UnixPlatform(PlatformGeneric):
             issue = open("/etc/issue.net", "r")
             ver = issue.read().strip()
             issue.close()
+            # False positive when editing on some platforms
+            # pylint: disable=no-member
             ver = "%s - %s" % (os.uname()[0], ver)
         except IOError as err:
             if err.errno == 2:  # No such file or directory
                 # Linux use of this file seems to be deprecated.
                 pass
+            # False positive when editing on some platforms
+            # pylint: disable=no-member
             ver = " ".join(os.uname())
         return ver
 

@@ -95,7 +95,8 @@ class Win32Platform(PlatformGeneric):
             os.makedirs(basepath, exist_ok=True)
         self._base = basepath
 
-    def default_dir(self):
+    @staticmethod
+    def default_dir():
         '''
         Default Directory.
 
@@ -105,7 +106,8 @@ class Win32Platform(PlatformGeneric):
         return os.path.abspath(
             os.path.join(os.getenv("USERPROFILE"), "Desktop"))
 
-    def filter_filename(self, filename):
+    @staticmethod
+    def filter_filename(filename):
         '''
         Filter Filename.
 
@@ -145,6 +147,8 @@ class Win32Platform(PlatformGeneric):
                     win32file.CloseHandle(port)  # type: ignore
                     port = None
 
+                # On cross platform IDEs pylint may false positive.
+                # pylint: disable=no-member
                 except pywintypes.error as err:  # type: ignore
                     # Error code 5 Apparently if the serial port is in use.
                     # Error code 121 Apparently if timeout in operation.
@@ -196,6 +200,8 @@ class Win32Platform(PlatformGeneric):
             fname, _filter, __flags = \
                 win32gui.GetOpenFileNameW(Filter=win_filter)  # type: ignore
             return str(fname)
+        # On cross platform IDEs pylint may false positive.
+        # pylint: disable=no-member
         except pywintypes.error as err:  # type: ignore
             self.logger.info("gui_open_file: Failed to get filename: %s", err)
         except NameError:
@@ -221,6 +227,8 @@ class Win32Platform(PlatformGeneric):
                 win32gui.GetSaveFileNameW(File=default_name,
                                           Filter=win_filter)  # type: ignore
             return str(fname)
+        # On cross platform IDEs pylint may false positive.
+        # pylint: disable=no-member
         except pywintypes.error as err:  # type: ignore
             self.logger.info("gui_save_file: Failed to get filename: %s", err)
         except NameError:
@@ -243,6 +251,8 @@ class Win32Platform(PlatformGeneric):
                 err = "No error detected"
                 pidl, _display_name, _ilmage_list = \
                     shell.SHBrowseForFolder()  # type: ignore
+            # On cross platform IDEs pylint may false positive.
+            # pylint: disable=no-member
             except pywintypes.com_error:  # type: ignore
                 pass
             if not pidl:
@@ -292,7 +302,7 @@ class Win32Platform(PlatformGeneric):
         Do we have sound support?
 
         :returns: Status of sound support
-        :rytpe: bool
+        :rtype: bool
         '''
         return HAVE_AUDIO
 
