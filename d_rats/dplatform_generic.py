@@ -2,7 +2,7 @@
 #
 # Copyright 2009 Dan Smith <dsmith@danplanet.com>
 # review 2015 Maurizio Andreotti  <iz2lxi@yahoo.it>
-# Copyright 2021-2023 John. E. Malmberg - Python3 Conversion
+# Copyright 2021-2023,2026 John. E. Malmberg - Python3 Conversion
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,16 +37,39 @@ if not os.name == "nt":
         HAVE_AUDIO = True
     except ModuleNotFoundError:
         pass
+else:
+    # This code is mainly to silence the linters when run on a
+    # platform with out sound support, it is actually unreachable.
+    class AudioSegment():
+        '''Mocked class when sound is not available.'''
+
+        # pylint: disable=no-self-use
+        def from_wav(self, soundfile):
+            '''Mocked method when sound is not available'''
+            print(f'No support for playing {soundfile}')
+
+        @staticmethod
+        def dummy():
+            '''Needs two public methods'''
+
+    def play(sound):
+        '''Mocked routine when sound is not available.'''
+        sound_type = type(sound)
+        print(f'Unable to play sound {sound_type} is unsupported')
+
 
 import urllib.request
-import urllib.parse
-import urllib.error
 
-import gi  # type: ignore # Needed for pylance on Microsoft Windows
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk # type: ignore
-from gi.repository import Gio # type: ignore
-
+# This version of D-Rats requires GTK 3.0, but not for doing unit
+# tests.   This allows the default unit tests to pass on a system with
+# out GTK+ installed.
+try:
+    import gi
+    gi.require_version("Gtk", "3.0")
+    from gi.repository import Gtk # type: ignore
+    from gi.repository import Gio # type: ignore
+except (ImportError, ValueError):
+    pass
 
 if '_' not in locals():
     import gettext
@@ -176,14 +199,15 @@ class PlatformGeneric():
         :rtype: str
         '''
         # Make trivial check from the normal paths
-        exe_path = shutil.which(name)
+        # known false positive in pylance
+        exe_path = shutil.which(name)  # type: ignore
         if exe_path:
             return exe_path
         programfiles = os.getenv("PROGRAMFILES")
         if programfiles:
             for program in [programfiles, programfiles + " (x86)"]:
                 test_path=os.path.join(program, name)
-                exe_path = shutil.which(name, path=test_path)
+                exe_path = shutil.which(name, path=test_path)  # type: ignore
                 if exe_path:
                     return exe_path
         return None
@@ -261,14 +285,14 @@ class PlatformGeneric():
         gio_path = Gio.File.parse_name(path)
         appinfo.launch([gio_path], None)
 
-    @staticmethod
-    def list_serial_ports():
+    def list_serial_ports(self):
         '''
         List Serial Ports.
 
         :returns: empty list
         :rtype: list
         '''
+        self.logger.info("list_serial_ports not available on this platform")
         return []
 
     @staticmethod
@@ -281,9 +305,8 @@ class PlatformGeneric():
         '''
         return "."
 
-    @staticmethod
-    # pylint: disable=unused-argument
-    def gui_open_file(mime_types=None, start_dir=None):
+    # pylint: disable=unused-argument, no-self-use
+    def gui_open_file(self, mime_types=None, start_dir=None):
         '''
         GUI Open File.
 
@@ -309,14 +332,14 @@ class PlatformGeneric():
         #    for mime_type in mime_types:
         #        exts = mimetypes.guess_all_extensions(mime_type, strict=True)
         #        filter_mime.set_name=(exts)
-                # In this case it does not seem to matter what string was
-                # passed to the filter, the filter shows up as unnamed.
-                # This issue does not reproduce in a quick test program.
+        # In this case it does not seem to matter what string was
+        # passed to the filter, the filter shows up as unnamed.
+        # This issue does not reproduce in a quick test program.
         #        filter_mime.add_mime_type=(mime_type)
         #        dlg.add_filter(filter_mime)
         #    filter_any = Gtk.FileFilter()
         #    filter_any.set_name(_("All files"))
-            # In this case the filter name gets set prpoerly unlike above.
+        # In this case the filter name gets set properly unlike above.
         #    filter_any.add_pattern=('*')
         #    dlg.add_filter(filter_any)
 
@@ -331,9 +354,9 @@ class PlatformGeneric():
             return fname
         return None
 
-    @staticmethod
-    # pylint: disable=unused-argument
-    def gui_save_file(mime_types=None, start_dir=None, default_name=None):
+    # pylint: disable=unused-argument, no-self-use
+    def gui_save_file(self, mime_types=None, start_dir=None,
+                      default_name=None):
         '''
         GUI Save File.
 
@@ -376,8 +399,8 @@ class PlatformGeneric():
             return fname
         return None
 
-    @staticmethod
-    def gui_select_dir(start_dir=None):
+    # pylint: disable=no-self-use
+    def gui_select_dir(self, start_dir=None):
         '''
         Gui Select Directory.
 
@@ -405,14 +428,14 @@ class PlatformGeneric():
             return fname
         return None
 
-    @staticmethod
-    def os_version_string():
+    def os_version_string(self):
         '''
         OS Version String.
 
         :returns: "Unknown Operating System"
         :rtype: str
         '''
+        self.logger.info("Unknown Operating System")
         return "Unknown Operating System"
 
     @staticmethod
@@ -487,7 +510,7 @@ class PlatformGeneric():
         Do we have sound support?
 
         :returns: Status of sound support
-        :rytpe: bool
+        :rtype: bool
         '''
         return HAVE_AUDIO
 
@@ -502,7 +525,8 @@ class PlatformGeneric():
         if not HAVE_AUDIO:
             self.logger.info("play_sound: "
                              "pydub and pyaudio not installed!")
+            return
 
-        sound = AudioSegment.from_wav(soundfile)
+        sound = AudioSegment.from_wav(soundfile) # type: ignore
         with suppress_stderr():
-            play(sound)
+            play(sound) # type: ignore

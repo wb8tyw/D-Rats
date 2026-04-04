@@ -108,6 +108,8 @@ class MacOSXPlatform(UnixPlatform):
 
     @staticmethod
     def _unix_doublefork_run(*args):
+        # False positive when editing on some platforms.
+        # pylint: disable=no-member
         pid1 = os.fork()
         if pid1 == 0:
             pid2 = os.fork()

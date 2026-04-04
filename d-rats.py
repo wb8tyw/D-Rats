@@ -30,6 +30,7 @@ import os
 import sys
 import traceback
 
+# pylint: disable=import-error
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
@@ -59,8 +60,8 @@ MODULE_LOGGER = logging.getLogger("D-Rats")
 sys.path.insert(0, os.path.join("/usr/share", "d-rats"))
 
 # import module to have spelling correction in chat and email applications
-from d_rats import utils, spell
 
+from d_rats import utils, spell
 spell.get_spell().test()
 
 IGNORE_ALL = False
@@ -88,7 +89,8 @@ def handle_exception(except_type, value, trace_back):
     global IGNORE_ALL
 
     if except_type is KeyboardInterrupt or IGNORE_ALL:
-        return sys.__excepthook__(except_type, value, trace_back)
+        sys.__excepthook__(except_type, value, trace_back)
+        return
 
     # Gdk.pointer_ungrab(Gdk.CURRENT_TIME)
     # Gdk.keyboard_ungrab(Gdk.CURRENT_TIME)

@@ -47,9 +47,10 @@ CHANGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR)
 export CHANGED_FILES
 
 rc=0
-for check_script in tests/pre-commit_d/*; do
+for check_script in tests/pre-commit_d/*.sh; do
     if ! "${check_script}"; then
         (( rc=rc+PIPESTATUS[0] ))
+		echo "${check_script} returned $rc"
     fi
 done
 exit "$rc"

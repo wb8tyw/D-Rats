@@ -1,0 +1,22 @@
+# requirements for d-rats
+# Packages needed for running
+lxml
+Pillow
+pycairo
+PyGObject
+pyserial
+pycountry
+# packages recommended for running
+geopy
+feedparser
+# pyaudio not available on macos in GitHub Workflows.
+pydub
+# packages needed for development
+build
+pip
+pylint
+setuptools
+Sphinx
+towncrier
+virtualenv
+wheel
